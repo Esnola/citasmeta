@@ -1,0 +1,8 @@
+@props([
+  'clase' => 'size-6',
+])
+
+<svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="{{$clase}}"
+     xmlns="http://www.w3.org/2000/svg">
+    <path fill="none" stroke="currentColor" stroke-width="2" d="M12,17 L12,19 M12,10 L12,16 M12,3 L2,22 L22,22 L12,3 Z"></path>
+</svg>

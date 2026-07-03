@@ -1,0 +1,24 @@
+---
+deployment:
+  tasks:
+    - export DEPLOYPATH=/home/juanjota/public_html_backup
+    - /bin/cp -R public $DEPLOYPATH/public
+    - /bin/cp -R app $DEPLOYPATH/app
+    - /bin/cp -R bootstrap $DEPLOYPATH/bootstrap
+    - /bin/cp -R config $DEPLOYPATH/config
+    - /bin/cp -R database $DEPLOYPATH/database
+    - /bin/cp -R lang $DEPLOYPATH/lang
+    - /bin/cp -R resources $DEPLOYPATH/resources
+    - /bin/cp -R routes $DEPLOYPATH/routes
+    - /bin/cp -R storage $DEPLOYPATH/storage
+    - /bin/cp artisan $DEPLOYPATH/artisan
+    - /bin/cp composer.json $DEPLOYPATH/composer.json
+    - /bin/cp composer.lock $DEPLOYPATH/composer.lock
+    - /bin/cp .env $DEPLOYPATH/.env
+    - cd $DEPLOYPATH && composer install --no-dev --no-interaction --prefer-dist
+    - cd $DEPLOYPATH && rm -rf bootstrap/cache/*
+    - cd $DEPLOYPATH && rm -rf storage/framework/views/*
+    - cd $DEPLOYPATH && php artisan config:cache
+    - cd $DEPLOYPATH && php artisan route:cache
+    - cd $DEPLOYPATH && php artisan view:cache
+    - cd $DEPLOYPATH && php artisan migrate --force
