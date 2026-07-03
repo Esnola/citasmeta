@@ -35,6 +35,9 @@ class DispatchDueWhatsAppMessages extends Command
                             $result = $sender->send($message);
 
                             $providerStatus = (string) (data_get($result, 'raw.status') ?? data_get($result, 'raw.messages.0.status', ''));
+                            if ($providerStatus === '' && filled($result['message_id'] ?? null)) {
+                                $providerStatus = 'sent';
+                            }
                             $isFailed = in_array($providerStatus, ['failed', 'undelivered'], true);
 
                             $message->update([
@@ -138,6 +141,7 @@ class DispatchDueWhatsAppMessages extends Command
                             'status' => WhatsAppMessage::STATUS_PENDING,
                             'metadata' => [
                                 'origin_appointment_id' => $appointment->id,
+                                'template_key' => config('whatsapp.default_template'),
                                 'channel' => AppointmentReminderPreference::CHANNEL_WHATSAPP,
                                 'lead_days' => $leadDays,
                             ],

@@ -52,7 +52,8 @@
       <p class="font-medium text-slate-200">Notas de prueba</p>
       <ul class="mt-2 space-y-1">
         <li>• Si usas un número local, se normaliza a formato internacional.</li>
-        <li>• Asegúrate de que `WHATSAPP_CLOUD_API_PHONE_NUMBER_ID` y `WHATSAPP_CLOUD_API_ACCESS_TOKEN` estén configurados.</li>
+        <li>• Asegúrate de que `META_WHATSAPP_PHONE_NUMBER_ID` y `META_WHATSAPP_ACCESS_TOKEN` estén configurados.</li>
+        <li>• Si quieres el botón rápido, define `META_WHATSAPP_TEST_RECIPIENT`.</li>
       </ul>
     </div>
 

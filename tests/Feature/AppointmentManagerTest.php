@@ -127,7 +127,7 @@ class AppointmentManagerTest extends TestCase
         Config::set('whatsapp.driver', 'cloud_api');
         Config::set('whatsapp.cloud_api.phone_number_id', '123456');
         Config::set('whatsapp.cloud_api.access_token', 'test-token');
-        Config::set('whatsapp.message_mode', 'text');
+        Config::set('whatsapp.message_mode', 'template');
 
         Http::fake(function ($request) {
             if (str_contains($request->url(), 'graph.facebook.com')) {
@@ -153,7 +153,13 @@ class AppointmentManagerTest extends TestCase
             return $request->url() === 'https://graph.facebook.com/v22.0/123456/messages'
                 && $request->data()['messaging_product'] === 'whatsapp'
                 && $request->data()['to'] === '34600111222'
-                && $request->data()['text']['body'] === 'Hola Ana te recordamos que el día 30/06/2026 tienes una cita a las 11:30 ; saludos Clínica Dental Eugenia';
+                && $request->data()['type'] === 'template'
+                && $request->data()['template']['name'] === 'clinical_reminder'
+                && $request->data()['template']['language']['code'] === 'es_ES'
+                && $request->data()['template']['components'][0]['type'] === 'body'
+                && $request->data()['template']['components'][0]['parameters'][0]['text'] === 'Ana'
+                && $request->data()['template']['components'][0]['parameters'][1]['text'] === '30/06/2026'
+                && $request->data()['template']['components'][0]['parameters'][2]['text'] === '11:30';
         });
 
         $message = WhatsAppMessage::query()->firstOrFail();
@@ -374,7 +380,7 @@ class AppointmentManagerTest extends TestCase
         Config::set('whatsapp.driver', 'cloud_api');
         Config::set('whatsapp.cloud_api.phone_number_id', '123456');
         Config::set('whatsapp.cloud_api.access_token', 'test-token');
-        Config::set('whatsapp.message_mode', 'text');
+        Config::set('whatsapp.message_mode', 'template');
 
         Http::fake(function ($request) {
             if (str_contains($request->url(), 'graph.facebook.com')) {
@@ -397,7 +403,11 @@ class AppointmentManagerTest extends TestCase
             return $request->url() === 'https://graph.facebook.com/v22.0/123456/messages'
                 && $request->data()['messaging_product'] === 'whatsapp'
                 && $request->data()['to'] === '34600111222'
-                && $request->data()['text']['body'] === 'Hola Ana te recordamos que el día 30/06/2026 tienes una cita a las 11:30 ; saludos Clínica Dental Eugenia';
+                && $request->data()['type'] === 'template'
+                && $request->data()['template']['name'] === 'clinical_reminder'
+                && $request->data()['template']['components'][0]['parameters'][0]['text'] === 'Ana'
+                && $request->data()['template']['components'][0]['parameters'][1]['text'] === '30/06/2026'
+                && $request->data()['template']['components'][0]['parameters'][2]['text'] === '11:30';
         });
 
         $message = WhatsAppMessage::query()->firstOrFail();
@@ -435,7 +445,7 @@ class AppointmentManagerTest extends TestCase
         Config::set('whatsapp.driver', 'cloud_api');
         Config::set('whatsapp.cloud_api.phone_number_id', '123456');
         Config::set('whatsapp.cloud_api.access_token', 'test-token');
-        Config::set('whatsapp.message_mode', 'text');
+        Config::set('whatsapp.message_mode', 'template');
 
         Http::fake(function ($request) {
             if (str_contains($request->url(), 'graph.facebook.com')) {
@@ -1422,7 +1432,7 @@ class AppointmentManagerTest extends TestCase
         Config::set('whatsapp.driver', 'cloud_api');
         Config::set('whatsapp.cloud_api.phone_number_id', '123456');
         Config::set('whatsapp.cloud_api.access_token', 'test-token');
-        Config::set('whatsapp.message_mode', 'text');
+        Config::set('whatsapp.message_mode', 'template');
 
         Http::fake(function ($request) {
             if (str_contains($request->url(), 'graph.facebook.com')) {
@@ -1454,7 +1464,11 @@ class AppointmentManagerTest extends TestCase
             return $request->url() === 'https://graph.facebook.com/v22.0/123456/messages'
                 && $request->data()['messaging_product'] === 'whatsapp'
                 && $request->data()['to'] === '34600111222'
-                && $request->data()['text']['body'] === 'Hola Ana te recordamos que el día 30/06/2026 tienes una cita a las 11:30 ; saludos Clínica Dental Eugenia';
+                && $request->data()['type'] === 'template'
+                && $request->data()['template']['name'] === 'clinical_reminder'
+                && $request->data()['template']['components'][0]['parameters'][0]['text'] === 'Ana'
+                && $request->data()['template']['components'][0]['parameters'][1]['text'] === '30/06/2026'
+                && $request->data()['template']['components'][0]['parameters'][2]['text'] === '11:30';
         });
 
         $message = WhatsAppMessage::query()->firstOrFail();
@@ -1496,7 +1510,7 @@ class AppointmentManagerTest extends TestCase
         Config::set('whatsapp.driver', 'cloud_api');
         Config::set('whatsapp.cloud_api.phone_number_id', '123456');
         Config::set('whatsapp.cloud_api.access_token', 'test-token');
-        Config::set('whatsapp.message_mode', 'text');
+        Config::set('whatsapp.message_mode', 'template');
 
         Http::fake(function ($request) {
             if (str_contains($request->url(), 'graph.facebook.com')) {
@@ -1551,7 +1565,7 @@ class AppointmentManagerTest extends TestCase
         Config::set('whatsapp.driver', 'cloud_api');
         Config::set('whatsapp.cloud_api.phone_number_id', '123456');
         Config::set('whatsapp.cloud_api.access_token', 'test-token');
-        Config::set('whatsapp.message_mode', 'text');
+        Config::set('whatsapp.message_mode', 'template');
 
         Http::fake(function ($request) {
             if (str_contains($request->url(), 'graph.facebook.com')) {
@@ -1604,7 +1618,7 @@ class AppointmentManagerTest extends TestCase
         Config::set('whatsapp.driver', 'cloud_api');
         Config::set('whatsapp.cloud_api.phone_number_id', '123456');
         Config::set('whatsapp.cloud_api.access_token', 'test-token');
-        Config::set('whatsapp.message_mode', 'text');
+        Config::set('whatsapp.message_mode', 'template');
 
         Http::fake(function ($request) {
             if (str_contains($request->url(), 'graph.facebook.com')) {

@@ -3,6 +3,7 @@
 namespace App\Services\WhatsApp;
 
 use App\Models\WhatsAppMessage;
+use App\Models\WhatsAppTemplate;
 use App\Traits\NormalizesPhone;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
@@ -48,7 +49,9 @@ class WhatsAppSender
     public function sendTestMessage(string $recipient, string $body, ?string $mode = null): array
     {
         return match (config('whatsapp.driver')) {
-            'cloud_api' => $this->sendTestViaCloudApi($recipient, $body),
+            'cloud_api' => ($mode === 'text')
+                ? $this->sendTestViaCloudApiText($recipient, $body)
+                : $this->sendTestViaCloudApiTemplate($recipient),
             'log' => $this->sendTestViaLog($recipient, $body),
             default => throw new RuntimeException('Unsupported WhatsApp driver: '.config('whatsapp.driver')),
         };
@@ -108,7 +111,7 @@ class WhatsAppSender
      */
     private function sendViaCloudApi(WhatsAppMessage $message): array
     {
-        $config = config('whatsapp.cloud_api');
+        $config = config('whatsapp.meta', config('whatsapp.cloud_api', []));
         $phoneNumberId = $config['phone_number_id'] ?? null;
         $accessToken = $config['access_token'] ?? null;
 
@@ -116,7 +119,7 @@ class WhatsAppSender
             throw new RuntimeException('WhatsApp Cloud API credentials are not configured.');
         }
 
-        $payload = $this->buildTextPayload($message);
+        $payload = $this->buildCloudApiPayload($message);
 
         $response = Http::baseUrl(rtrim((string) ($config['base_url'] ?? 'https://graph.facebook.com'), '/'))
             ->acceptJson()
@@ -141,9 +144,9 @@ class WhatsAppSender
      *
      * @throws RequestException
      */
-    private function sendTestViaCloudApi(string $recipient, string $body): array
+    private function sendTestViaCloudApiText(string $recipient, string $body): array
     {
-        $config = config('whatsapp.cloud_api');
+        $config = config('whatsapp.meta', config('whatsapp.cloud_api', []));
         $phoneNumberId = $config['phone_number_id'] ?? null;
         $accessToken = $config['access_token'] ?? null;
 
@@ -179,9 +182,67 @@ class WhatsAppSender
         ];
     }
 
+    /**
+     * @return array{provider:string,message_id:?string,payload:array,raw:array}
+     *
+     * @throws RequestException
+     */
+    private function sendTestViaCloudApiTemplate(string $recipient): array
+    {
+        $config = config('whatsapp.meta', config('whatsapp.cloud_api', []));
+        $phoneNumberId = $config['phone_number_id'] ?? null;
+        $accessToken = $config['access_token'] ?? null;
+
+        if (! $phoneNumberId || ! $accessToken) {
+            throw new RuntimeException('WhatsApp Cloud API credentials are not configured.');
+        }
+
+        $normalizedRecipient = $this->normalizeInternationalPhone($recipient);
+        $template = WhatsAppTemplate::resolve(config('whatsapp.default_template'));
+        $scheduledFor = now();
+
+        $payload = $this->buildTemplatePayloadFromValues(
+            $normalizedRecipient,
+            $template['key'],
+            $template['message'],
+            [
+                '[NOMBRE]' => 'Prueba',
+                '[APELLIDOS]' => '',
+                '[TELEFONO]' => $normalizedRecipient,
+                '[DIA]' => $scheduledFor->format('d/m/Y'),
+                '[HORA]' => $scheduledFor->format('H:i'),
+            ]
+        );
+
+        $response = Http::baseUrl(rtrim((string) ($config['base_url'] ?? 'https://graph.facebook.com'), '/'))
+            ->acceptJson()
+            ->asJson()
+            ->withToken($accessToken)
+            ->timeout((int) ($config['timeout'] ?? 15))
+            ->connectTimeout(10)
+            ->post(sprintf('/%s/%s/messages', $config['version'] ?? 'v22.0', $phoneNumberId), $payload)
+            ->throw()
+            ->json();
+
+        return [
+            'provider' => 'cloud_api',
+            'message_id' => data_get($response, 'messages.0.id'),
+            'payload' => $payload,
+            'raw' => $response,
+        ];
+    }
+
     public function testRecipient(): ?string
     {
-        return null;
+        $recipient = config('whatsapp.meta.test_recipient')
+            ?: config('whatsapp.cloud_api.test_recipient');
+
+        return filled($recipient) ? (string) $recipient : null;
+    }
+
+    private function buildCloudApiPayload(WhatsAppMessage $message): array
+    {
+        return $this->buildTemplatePayload($message);
     }
 
     private function buildTextPayload(WhatsAppMessage $message): array
@@ -197,5 +258,72 @@ class WhatsAppSender
                 'body' => $body,
             ],
         ];
+    }
+
+    private function buildTemplatePayload(WhatsAppMessage $message): array
+    {
+        $templateKey = (string) data_get($message->metadata, 'template_key', WhatsAppTemplate::defaultKey());
+        $template = WhatsAppTemplate::resolve($templateKey);
+
+        return $this->buildTemplatePayloadFromValues(
+            $message->normalizedPhone(),
+            $template['key'],
+            $template['message'],
+            [
+                '[NOMBRE]' => $message->nombre,
+                '[APELLIDOS]' => $message->apellidos,
+                '[TELEFONO]' => $message->telefono,
+                '[DIA]' => $message->scheduled_for?->format('d/m/Y'),
+                '[HORA]' => $message->scheduled_for?->format('H:i'),
+            ]
+        );
+    }
+
+    /**
+     * @param  array<string, string|null>  $replacements
+     */
+    private function buildTemplatePayloadFromValues(string $recipient, string $templateKey, string $templateMessage, array $replacements): array
+    {
+        return [
+            'messaging_product' => 'whatsapp',
+            'to' => $recipient,
+            'type' => 'template',
+            'template' => [
+                'name' => $templateKey,
+                'language' => [
+                    'code' => (string) config('whatsapp.template_language_code', 'es_ES'),
+                ],
+                'components' => $this->buildTemplateComponentsFromValues($templateMessage, $replacements),
+            ],
+        ];
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function buildTemplateComponentsFromValues(string $template, array $replacements): array
+    {
+        preg_match_all('/\[[A-Z_]+\]/', $template, $matches);
+
+        $placeholders = array_values(array_unique($matches[0] ?? []));
+
+        if ($placeholders === []) {
+            return [];
+        }
+
+        $parameters = array_values(array_filter(array_map(
+            static fn (string $placeholder): ?array => isset($replacements[$placeholder])
+                ? [
+                    'type' => 'text',
+                    'text' => (string) $replacements[$placeholder],
+                ]
+                : null,
+            $placeholders
+        )));
+
+        return $parameters === [] ? [] : [[
+            'type' => 'body',
+            'parameters' => $parameters,
+        ]];
     }
 }

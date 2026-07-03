@@ -31,6 +31,9 @@ class SendWhatsAppMessage implements ShouldQueue
         $result = $sender->send($message);
 
         $providerStatus = (string) (data_get($result, 'raw.status') ?? data_get($result, 'raw.messages.0.status', ''));
+        if ($providerStatus === '' && filled($result['message_id'] ?? null)) {
+            $providerStatus = 'sent';
+        }
 
         $message->update([
             'status' => $this->resolveStatus($providerStatus),

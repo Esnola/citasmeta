@@ -112,7 +112,7 @@ class ClientMessageSchedulerTest extends TestCase
         Config::set('whatsapp.driver', 'cloud_api');
         Config::set('whatsapp.cloud_api.phone_number_id', '123456');
         Config::set('whatsapp.cloud_api.access_token', 'test-token');
-        Config::set('whatsapp.message_mode', 'text');
+        Config::set('whatsapp.message_mode', 'template');
 
         Http::fake(function ($request) {
             if (str_contains($request->url(), 'graph.facebook.com')) {

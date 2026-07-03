@@ -20,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->validateCsrfTokens(except: [
             'webhooks/twilio/whatsapp-status',
+            'webhooks/whatsapp/meta',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

@@ -12,7 +12,7 @@ class SettingsPageTest extends TestCase
 
     public function test_settings_page_loads_with_collapsible_sections(): void
     {
-        $admin = User::factory()->create();
+        $admin = User::factory()->create(['is_admin' => true]);
 
         $this->actingAs($admin)
             ->get(route('settings.index'))

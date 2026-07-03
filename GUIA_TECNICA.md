@@ -202,7 +202,7 @@ Puedes:
 
 - Indicar un destinatario
 - Ver el payload antes de enviar
-- Enviar al destinatario guardado si existe `WHATSAPP_CLOUD_API_PHONE_NUMBER_ID`
+- Enviar al destinatario guardado si existe `META_WHATSAPP_TEST_RECIPIENT`
 
 ### 11.2 Estado actual
 
@@ -219,8 +219,11 @@ Muestra:
 Variables habituales:
 
 - `WHATSAPP_DRIVER=cloud_api`
-- `WHATSAPP_CLOUD_API_PHONE_NUMBER_ID=TuPhoneNumberID`
-- `WHATSAPP_CLOUD_API_ACCESS_TOKEN=TuTokenDeAcceso`
+- `WHATSAPP_DEFAULT_TEMPLATE=confirmar_cita`
+- `META_WHATSAPP_PHONE_NUMBER_ID=TuPhoneNumberID`
+- `META_WHATSAPP_ACCESS_TOKEN=TuTokenDeAcceso`
+
+La plantilla de Meta y la clave local de la app deben coincidir. Si en Meta la plantilla se llama `confirmar_cita`, usa ese mismo valor en `WHATSAPP_DEFAULT_TEMPLATE`.
 
 Para desarrollar usa `log` que solo registra los mensajes en el log sin enviar.
 

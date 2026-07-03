@@ -4,9 +4,10 @@
 @section('content')
   @php
     $driver = config('whatsapp.driver');
-    $cloudApi = config('whatsapp.cloud_api', []);
-    $phoneNumberId = (string) ($cloudApi['phone_number_id'] ?? '');
-    $accessToken = (string) ($cloudApi['access_token'] ?? '');
+    $meta = config('whatsapp.meta', []);
+    $phoneNumberId = (string) ($meta['phone_number_id'] ?? '');
+    $wabaId = (string) ($meta['waba_id'] ?? '');
+    $accessToken = (string) ($meta['access_token'] ?? '');
     $hasCredentials = filled($phoneNumberId) && filled($accessToken);
   @endphp
 
@@ -91,6 +92,9 @@
               <p class="mt-1 text-sm text-slate-300">
                 {{ $phoneNumberId ? 'Phone Number ID configurado' : 'Falta Phone Number ID' }}
               </p>
+              <p class="mt-1 text-sm text-slate-300">
+                Webhook: {{ route('webhooks.whatsapp.meta') }}
+              </p>
             </div>
           </div>
         </div>
@@ -140,7 +144,7 @@
             </div>
             <div class="rounded-2xl border border-white/10 bg-slate-900/60 p-4">
               <p class="font-medium">3. Configura el .env</p>
-              <p class="mt-1 text-slate-300">Define `WHATSAPP_DRIVER=cloud_api`, `WHATSAPP_CLOUD_API_PHONE_NUMBER_ID` y `WHATSAPP_CLOUD_API_ACCESS_TOKEN`.</p>
+              <p class="mt-1 text-slate-300">Define `WHATSAPP_DRIVER=cloud_api`, `META_WHATSAPP_PHONE_NUMBER_ID` y `META_WHATSAPP_ACCESS_TOKEN`.</p>
             </div>
           </div>
         </div>
@@ -177,17 +181,23 @@
         </div>
 
         <div x-show="isOpen('status')" x-cloak class="mt-6 grid gap-4">
-          <div class="rounded-2xl border border-white/10 bg-slate-900/60 p-4">
-            <p class="text-xs uppercase tracking-[0.25em] text-slate-400">Phone Number ID</p>
-            <p class="mt-2 font-medium">
-              {{ $phoneNumberId ? Str::mask($phoneNumberId, '*', 4) : 'No configurado' }}
-            </p>
-          </div>
-          <div class="rounded-2xl border border-white/10 bg-slate-900/60 p-4">
-            <p class="text-xs uppercase tracking-[0.25em] text-slate-400">Access Token</p>
-            <p class="mt-2 font-medium">{{ $accessToken ? 'Configurado' : 'No configurado' }}</p>
-            <p class="mt-1 text-sm text-slate-300">Token de larga duración para la API de WhatsApp.</p>
-          </div>
+            <div class="rounded-2xl border border-white/10 bg-slate-900/60 p-4">
+              <p class="text-xs uppercase tracking-[0.25em] text-slate-400">Phone Number ID</p>
+              <p class="mt-2 font-medium">
+                {{ $phoneNumberId ? Str::mask($phoneNumberId, '*', 4) : 'No configurado' }}
+              </p>
+            </div>
+            <div class="rounded-2xl border border-white/10 bg-slate-900/60 p-4">
+              <p class="text-xs uppercase tracking-[0.25em] text-slate-400">WABA ID</p>
+              <p class="mt-2 font-medium">
+                {{ $wabaId ? Str::mask($wabaId, '*', 4) : 'No configurado' }}
+              </p>
+            </div>
+            <div class="rounded-2xl border border-white/10 bg-slate-900/60 p-4">
+              <p class="text-xs uppercase tracking-[0.25em] text-slate-400">Access Token</p>
+              <p class="mt-2 font-medium">{{ $accessToken ? 'Configurado' : 'No configurado' }}</p>
+              <p class="mt-1 text-sm text-slate-300">Token de larga duración para la API de WhatsApp.</p>
+            </div>
         </div>
         <div x-show="showDropHint('status', 'after')" x-cloak
              class="mt-4 h-1 rounded-full bg-emerald-400/80 shadow-[0_0_24px_rgba(52,211,153,0.45)]"></div>

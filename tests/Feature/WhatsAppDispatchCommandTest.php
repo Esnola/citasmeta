@@ -19,6 +19,8 @@ class WhatsAppDispatchCommandTest extends TestCase
 
     public function test_due_messages_are_sent_via_cloud_api_and_marked_as_sent(): void
     {
+        Carbon::setTestNow('2026-06-23 12:00:00');
+
         $admin = User::factory()->create();
 
         WhatsAppMessage::query()->create([
@@ -33,12 +35,10 @@ class WhatsAppDispatchCommandTest extends TestCase
         ]);
 
         Config::set('whatsapp.driver', 'cloud_api');
-        Config::set('whatsapp.cloud_api.phone_number_id', '123456');
-        Config::set('whatsapp.cloud_api.access_token', 'test-token');
-        Config::set('whatsapp.cloud_api.base_url', 'https://graph.facebook.com');
-        Config::set('whatsapp.cloud_api.version', 'v22.0');
-        Config::set('whatsapp.cloud_api.phone_number_id', '1234567890');
-        Config::set('whatsapp.cloud_api.access_token', 'test-token');
+        Config::set('whatsapp.meta.phone_number_id', '1234567890');
+        Config::set('whatsapp.meta.access_token', 'test-token');
+        Config::set('whatsapp.meta.base_url', 'https://graph.facebook.com');
+        Config::set('whatsapp.meta.version', 'v22.0');
         Config::set('whatsapp.default_country_code', '+34');
 
         Http::fake(function ($request) {
@@ -60,8 +60,14 @@ class WhatsAppDispatchCommandTest extends TestCase
         $this->assertSame(WhatsAppMessage::STATUS_SENT, $message->status);
         $this->assertSame('wamid.TEST123', $message->provider_message_id);
         $this->assertSame('cloud_api', $message->provider_payload['provider']);
-        $this->assertSame('Hola Ana', $message->provider_payload['payload']['text']['body']);
+        $this->assertSame('template', $message->provider_payload['payload']['type']);
+        $this->assertSame('clinical_reminder', $message->provider_payload['payload']['template']['name']);
+        $this->assertSame('Ana', $message->provider_payload['payload']['template']['components'][0]['parameters'][0]['text']);
+        $this->assertSame('23/06/2026', $message->provider_payload['payload']['template']['components'][0]['parameters'][1]['text']);
+        $this->assertSame('11:59', $message->provider_payload['payload']['template']['components'][0]['parameters'][2]['text']);
         $this->assertNotNull($message->sent_at);
+
+        Carbon::setTestNow();
     }
 
     public function test_active_unsent_due_appointments_are_queued_sent_and_marked_as_sent(): void
@@ -84,9 +90,9 @@ class WhatsAppDispatchCommandTest extends TestCase
         ]);
 
         Config::set('whatsapp.driver', 'cloud_api');
-        Config::set('whatsapp.cloud_api.phone_number_id', '123456');
-        Config::set('whatsapp.cloud_api.access_token', 'test-token');
-        Config::set('whatsapp.message_mode', 'text');
+        Config::set('whatsapp.meta.phone_number_id', '123456');
+        Config::set('whatsapp.meta.access_token', 'test-token');
+        Config::set('whatsapp.message_mode', 'template');
         Config::set('whatsapp.default_country_code', '+34');
 
         Http::fake(function ($request) {

@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Models\WhatsAppTemplate;
 use App\Services\WhatsApp\WhatsAppSender;
 use App\Traits\NormalizesPhone;
 use Illuminate\Support\Arr;
@@ -41,7 +42,7 @@ class WhatsAppConnectionTest extends Component
 
         if (! $savedRecipient) {
             $this->statusType = 'error';
-            $this->status = 'Define WHATSAPP_CLOUD_API_PHONE_NUMBER_ID para usar este acceso rápido.';
+            $this->status = 'Define META_WHATSAPP_TEST_RECIPIENT para usar este acceso rápido.';
             $this->details = [];
 
             return;
@@ -96,15 +97,38 @@ class WhatsAppConnectionTest extends Component
 
     private function buildCloudApiPreviewPayload(array $preview): array
     {
+        $recipient = static::normalizeInternationalPhone($preview['recipient']);
+        $template = WhatsAppTemplate::resolve(config('whatsapp.default_template'));
+        $scheduledFor = now();
+
         return [
             'provider' => 'cloud_api',
             'request' => [
                 'messaging_product' => 'whatsapp',
-                'to' => static::normalizeInternationalPhone($preview['recipient']),
-                'type' => 'text',
-                'text' => [
-                    'preview_url' => false,
-                    'body' => $preview['body'],
+                'to' => $recipient,
+                'type' => 'template',
+                'template' => [
+                    'name' => $template['key'],
+                    'language' => [
+                        'code' => (string) config('whatsapp.template_language_code', 'es_ES'),
+                    ],
+                    'components' => [[
+                        'type' => 'body',
+                        'parameters' => [
+                            [
+                                'type' => 'text',
+                                'text' => 'Prueba',
+                            ],
+                            [
+                                'type' => 'text',
+                                'text' => $scheduledFor->format('d/m/Y'),
+                            ],
+                            [
+                                'type' => 'text',
+                                'text' => $scheduledFor->format('H:i'),
+                            ],
+                        ],
+                    ]],
                 ],
             ],
         ];

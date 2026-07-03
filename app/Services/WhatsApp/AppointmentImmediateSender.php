@@ -6,6 +6,7 @@ use App\Jobs\SendWhatsAppMessage;
 use App\Models\Appointment;
 use App\Models\Client;
 use App\Models\WhatsAppMessage;
+use App\Models\WhatsAppTemplate;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Throwable;
@@ -41,6 +42,7 @@ class AppointmentImmediateSender
             'status' => WhatsAppMessage::STATUS_PENDING,
             'metadata' => [
                 'origin_appointment_id' => $appointment->id,
+                'template_key' => WhatsAppTemplate::defaultKey(),
                 'immediate_send' => true,
                 'immediate_sent_at' => now()->toDateTimeString(),
             ],
