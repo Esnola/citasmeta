@@ -76,7 +76,7 @@
 
           <flux:field>
             <flux:label>Hora</flux:label>
-            <x-formularios.input wire:model="scheduled_time" data-time-picker readonly placeholder="--:--"/>
+            <x-formularios.input wire:model="scheduled_time" type="time" min="08:00" max="18:00" step="900"/>
             <flux:error name="scheduled_time"/>
           </flux:field>
         </div>

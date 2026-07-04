@@ -117,8 +117,10 @@
                                     <flux:label>Hora</flux:label>
                                     <x-formularios.input
                                         wire:model="hora"
-                                        data-time-picker
-                                        readonly
+                                        type="time"
+                                        min="08:00"
+                                        max="18:00"
+                                        step="900"
                                         placeholder="--:--"
                                         :disabled="! $canChangeAppointment"
                                     />
